@@ -24,6 +24,19 @@ class Day02 {
         }.sum()
     }
 
+    fun part2(input: List<String>): Int = input.sumOf { line ->
+        val maxRed = line.split(";").maxOfOrNull { grab ->
+            count(red, grab)
+        }
+        val maxGreen = line.split(";").maxOfOrNull { grab ->
+            count(green, grab)
+        }
+        val maxBlue = line.split(";").maxOfOrNull { grab ->
+            count(blue, grab)
+        }
+        maxRed!! * maxGreen!! * maxBlue!!
+    }
+
     private fun count(color: Regex, line: String) =
         color.findAll(line).sumOf { matchResult ->
             matchResult.groups["number"]?.value?.toInt() ?: 0
@@ -36,6 +49,7 @@ class Day02 {
         @JvmStatic
         fun main(args: Array<String>) {
             println(day.part1(input))
+            println(day.part2(input))
         }
     }
 }
