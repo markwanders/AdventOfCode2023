@@ -19,4 +19,10 @@ class Day04Test {
         assertEquals(13, day.part1(testInput1))
     }
 
+    @Test
+    fun testCase2() {
+        val day = Day04()
+
+        assertEquals(30, day.part2(testInput1))
+    }
 }
