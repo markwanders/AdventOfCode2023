@@ -1,4 +1,4 @@
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import kotlin.test.Test
 
 class Day03Test {
@@ -12,7 +12,7 @@ class Day03Test {
         .....+.58.
         ..592.....
         ......755.
-        ...${'$'}.*....
+        ...$.*....
         .664.598..
     """.trimIndent().split("\n")
     private val testInput2 = """
@@ -24,7 +24,7 @@ class Day03Test {
         .....+.58.
         ..592.....
         ......755.
-        ...${'$'}.*....
+        ...$.*....
         .664.598..
     """.trimIndent().split("\n")
 

@@ -31,28 +31,42 @@ class Day03(input: List<String>) {
                 nextRow?.any { number.contains(it) || number.contains(it + 1) || number.contains(it - 1) } ?: false
     }
 
-    private fun countAdjacent(gears: Set<Int>, row: Set<IntRange>?, previousRow: Set<IntRange>?, nextRow: Set<IntRange>?): Int {
-        var adjacent = 0
-        var factor = 1
-        //TODO: should filter numbers on intranges that have an adjacent gear
-        if (gears.any { gear -> row?.any { it.contains(gear + 1) } == true || row?.any { it.contains(gear + 1) } == true }) {
-            adjacent++
-            factor *= 1
+    private fun calculateRatio(
+        gears: Set<Int>,
+        row: Map<IntRange, Int>,
+        previousRow: Map<IntRange, Int>?,
+        nextRow: Map<IntRange, Int>?
+    ): Int {
+        return gears.sumOf { x ->
+            val sameRowAdjacent = row.keys.filter { intRange -> intRange.last == x - 1 || intRange.first == x + 1 }
+            val previousRowAdjacent = previousRow?.keys?.filter { intRange ->
+                intRange.contains(x) || intRange.contains(x + 1) || intRange.contains(x - 1)
+            } ?: emptySet()
+            val nextRowAdjacent = nextRow?.keys?.filter { intRange ->
+                intRange.contains(x) || intRange.contains(x + 1) || intRange.contains(x - 1)
+            } ?: emptySet()
+            val allAdjacentNumbers = sameRowAdjacent.map { row[it] }
+                .plus(previousRowAdjacent.map { previousRow?.get(it)!! }
+                    .plus(nextRowAdjacent.map { nextRow?.get(it)!! }))
+            if (allAdjacentNumbers.size == 2) {
+                allAdjacentNumbers.reduce { acc, i -> acc!! * i!! }!!
+            } else {
+                0
+            }
         }
-        if (gears.any { gear -> previousRow?.any { it.contains(gear) } == true || previousRow?.any { it.contains(gear + 1) } == true || previousRow?.any { it.contains(gear + 1) } == true }) {
-            adjacent++
-            factor += 1
-        }
-        if (gears.any { gear -> nextRow?.any { it.contains(gear) } == true || nextRow?.any { it.contains(gear + 1) } == true || nextRow?.any { it.contains(gear + 1) } == true }) {
-            adjacent++
-            factor += 1
-        }
-        return if (adjacent == 2) factor else 0
     }
 
     fun part2(): Int {
-        val allGears = allSymbols.entries.associateBy({ it.key }, { it.value.filter { entry -> entry.value == '*' }.keys })
-        return allGears.map { (y, gears) -> countAdjacent(gears, allNumbers[y]?.keys, allNumbers[y-1]?.keys, allNumbers[y+1]?.keys)}.sum()
+        val allGears =
+            allSymbols.entries.associateBy({ it.key }, { it.value.filter { entry -> entry.value == '*' }.keys })
+        return allGears.map { (y, gears) ->
+            calculateRatio(
+                gears,
+                allNumbers[y]!!,
+                allNumbers[y - 1],
+                allNumbers[y + 1]
+            )
+        }.sum()
     }
 
     companion object {
