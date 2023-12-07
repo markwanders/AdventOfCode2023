@@ -4,33 +4,113 @@ import kotlin.math.pow
 class Day07 {
     fun part1(input: List<String>): Int {
         val parts = input.map { it.split(" ") }
-        val cardComparator = Comparator<String> { a, b ->
-            val valA = valueOfHand(a)
-            val valB = valueOfHand(b)
+        val hands = parts.associateBy({ it.first() }, { it.last().toInt() }).toSortedMap(cardComparator())
+        return hands.entries.mapIndexed { index, mutableEntry -> (1 + index) * mutableEntry.value }.sum()
+    }
+
+    fun part2(input: List<String>): Int {
+        val parts = input.map { it.split(" ") }
+        val hands = parts.associateBy({ it.first() }, { it.last().toInt() }).toSortedMap(cardComparator(true))
+        return hands.entries.mapIndexed { index, mutableEntry -> (1 + index) * mutableEntry.value }.sum()
+    }
+
+    private fun cardComparator(part2: Boolean = false): Comparator<String> {
+        return Comparator { a, b ->
+            val valA = valueOfHand(a, part2)
+            val valB = valueOfHand(b, part2)
             when {
                 valA > valB -> 1
                 valB > valA -> -1
                 else -> compareByCardInOrder(a, b)
             }
         }
-        val hands = parts.associateBy({it.first()}, {it.last().toInt()}).toSortedMap(cardComparator)
-        return hands.entries.mapIndexed { index, mutableEntry -> (1 + index) * mutableEntry.value}.sum()
     }
 
-    private fun valueOfHand(hand: String): Int {
-        val combos = hand.toList().groupingBy { char -> char }.eachCount().mapKeys { (key, _) -> valueOfCard(key) }
-        return combos.values.sumOf { 10.0.pow(it).toInt()}
+    private fun valueOfHand(hand: String, part2: Boolean = false): Int {
+        val combos =
+            hand.toList().groupingBy { char -> char }.eachCount().mapKeys { (key, _) -> valueOfCard(key, part2) }
+                .toMutableMap()
+        if (part2 && hand.contains("J")) {
+            val countJ = combos[1]
+            val fourOfAKind = combos.entries.firstOrNull { it.value == 4 }
+            val threeOfAKind = combos.entries.firstOrNull { it.value == 3 }
+            val highPair = combos.entries.filter { it.value == 2 }.maxByOrNull { entry -> entry.value }
+            val highCard = combos.entries.maxBy { it.key }
+            when (countJ) {
+                1 ->
+                    when {
+                        fourOfAKind != null -> {
+                            combos[fourOfAKind.key] = fourOfAKind.value + 1
+                            combos[1] = 0
+                        }
+
+                        threeOfAKind != null -> {
+                            combos[threeOfAKind.key] = threeOfAKind.value + 1
+                            combos[1] = 0
+                        }
+
+                        highPair != null -> {
+                            combos[highPair.key] = highPair.value + 1
+                            combos[1] = 0
+                        }
+
+                        else -> {
+                            combos[highCard.key] = highCard.value + 1
+                            combos[1] = 0
+                        }
+                    }
+
+                2 ->
+                    when {
+                        threeOfAKind != null -> {
+                            combos[threeOfAKind.key] = threeOfAKind.value + 2
+                            combos[1] = 0
+                        }
+
+                        highPair != null -> {
+                            combos[highPair.key] = highPair.value + 2
+                            combos[1] = 0
+                        }
+
+                        else -> {
+                            combos[highCard.key] = highCard.value + 2
+                            combos[1] = 0
+                        }
+                    }
+
+                3 ->
+                    when {
+                        highPair != null -> {
+                            combos[highPair.key] = highPair.value + 3
+                            combos[1] = 0
+                        }
+
+                        else -> {
+                            combos[highCard.key] = highCard.value + 3
+                            combos[1] = 0
+                        }
+                    }
+
+                4 -> {
+                    combos[highCard.key] = 5
+                    combos[1] = 0
+                }
+            }
+            println("$hand with $countJ J's becomes $combos")
+
+        }
+        return combos.values.filter { it > 0 }.sumOf { 10.0.pow(it).toInt() }
     }
 
-    private fun valueOfCard(card: Char): Int {
-        return if(card.isDigit()) {
+    private fun valueOfCard(card: Char, part2: Boolean = false): Int {
+        return if (card.isDigit()) {
             card.digitToInt()
         } else {
-            when(card) {
+            when (card) {
                 'A' -> 14
                 'K' -> 13
                 'Q' -> 12
-                'J' -> 11
+                'J' -> if (part2) 1 else 11
                 'T' -> 10
                 else -> throw Exception("Unknown card value")
             }
@@ -58,7 +138,8 @@ class Day07 {
                     }
                 }
             }
-    }
+        }
+
     companion object {
         private val day = Day07()
         private val input = File("src/main/resources/day07.txt").readLines()
@@ -66,6 +147,7 @@ class Day07 {
         @JvmStatic
         fun main(args: Array<String>) {
             println(day.part1(input))
+            println(day.part2(input))
         }
     }
 }
