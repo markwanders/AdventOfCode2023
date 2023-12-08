@@ -21,7 +21,7 @@ class Day07 {
             when {
                 valA > valB -> 1
                 valB > valA -> -1
-                else -> compareByCardInOrder(a, b)
+                else -> compareByCardInOrder(a, b, part2)
             }
         }
     }
@@ -32,9 +32,9 @@ class Day07 {
                 .toMutableMap()
         if (part2 && hand.contains("J")) {
             val countJ = combos[1]
-            val fourOfAKind = combos.entries.firstOrNull { it.value == 4 }
-            val threeOfAKind = combos.entries.firstOrNull { it.value == 3 }
-            val highPair = combos.entries.filter { it.value == 2 }.maxByOrNull { entry -> entry.value }
+            val fourOfAKind = combos.entries.firstOrNull { it.value == 4 && it.key != 1}
+            val threeOfAKind = combos.entries.firstOrNull { it.value == 3 && it.key != 1}
+            val highPair = combos.entries.filter { it.value == 2 && it.key != 1}.maxByOrNull { entry -> entry.value }
             val highCard = combos.entries.maxBy { it.key }
             when (countJ) {
                 1 ->
@@ -96,8 +96,6 @@ class Day07 {
                     combos[1] = 0
                 }
             }
-            println("$hand with $countJ J's becomes $combos")
-
         }
         return combos.values.filter { it > 0 }.sumOf { 10.0.pow(it).toInt() }
     }
@@ -117,22 +115,22 @@ class Day07 {
         }
     }
 
-    private fun compareByCardInOrder(a: String, b: String) =
+    private fun compareByCardInOrder(a: String, b: String, part2: Boolean = false) =
         when {
-            valueOfCard(a[0]) > valueOfCard(b[0]) -> 1
-            valueOfCard(b[0]) > valueOfCard(a[0]) -> -1
+            valueOfCard(a[0], part2) > valueOfCard(b[0], part2) -> 1
+            valueOfCard(b[0], part2) > valueOfCard(a[0], part2) -> -1
             else -> when {
-                valueOfCard(a[1]) > valueOfCard(b[1]) -> 1
-                valueOfCard(b[1]) > valueOfCard(a[1]) -> -1
+                valueOfCard(a[1], part2) > valueOfCard(b[1], part2) -> 1
+                valueOfCard(b[1], part2) > valueOfCard(a[1], part2) -> -1
                 else -> when {
-                    valueOfCard(a[2]) > valueOfCard(b[2]) -> 1
-                    valueOfCard(b[2]) > valueOfCard(a[2]) -> -1
+                    valueOfCard(a[2], part2) > valueOfCard(b[2], part2) -> 1
+                    valueOfCard(b[2], part2) > valueOfCard(a[2], part2) -> -1
                     else -> when {
-                        valueOfCard(a[3]) > valueOfCard(b[3]) -> 1
-                        valueOfCard(b[3]) > valueOfCard(a[3]) -> -1
+                        valueOfCard(a[3], part2) > valueOfCard(b[3], part2) -> 1
+                        valueOfCard(b[3], part2) > valueOfCard(a[3], part2) -> -1
                         else -> when {
-                            valueOfCard(a[4]) > valueOfCard(b[4]) -> 1
-                            valueOfCard(b[4]) > valueOfCard(a[4]) -> -1
+                            valueOfCard(a[4], part2) > valueOfCard(b[4], part2) -> 1
+                            valueOfCard(b[4], part2) > valueOfCard(a[4], part2) -> -1
                             else -> 0
                         }
                     }
