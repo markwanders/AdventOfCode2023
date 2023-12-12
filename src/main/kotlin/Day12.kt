@@ -7,30 +7,27 @@ class Day12 {
             val springs = parts.first()
             val groups = parts.last().split(",").map { it.toInt() }
             val corrupted = springs.indices.filter { springs[it] == '?' }
-            var regex = "^\\.*"
-            groups.forEachIndexed { index, number ->
-                val str = "#".repeat(number)
-                regex += "($str)"
-                if (index < groups.size - 1) {
-                    regex+="\\.+"
-                }
-            }
-            regex += "\\.*$"
-            val permutations = permutate(springs, corrupted, mutableSetOf(springs.replace('?', '.')))
-            permutations.filter { it.matches(Regex(regex)) }.size
+            val permutations = permutate(springs, corrupted, mutableSetOf(springs.replace('?', '.')), groups.sum())
+            permutations.map { toPermutation(it) }.filter { permutation -> permutation == groups }.size
     }
 
-    private fun permutate(springs: String, corrupted: List<Int>, permutations: MutableSet<String>): Set<String> {
+    private fun permutate(springs: String, corrupted: List<Int>, permutations: MutableSet<String>, maxSprings: Int): Set<String> {
         for (it in corrupted) {
-            val newSprings = springs.replace('?', '.').replaceRange(it, it + 1, "#")
-            if (permutations.contains(newSprings)) {
-                continue
+            if(springs.count { it == '#' } < maxSprings) {
+                val newSprings = springs.replace('?', '.').replaceRange(it, it + 1, "#")
+                if (permutations.contains(newSprings)) {
+                    continue
+                }
+                permutations.add(newSprings)
+                permutate(newSprings, corrupted, permutations, maxSprings)
             }
-            permutations.add(newSprings)
-            permutate(newSprings, corrupted, permutations)
         }
         return permutations
     }
+
+    private fun toPermutation(spring: String) : List<Int> =
+        spring.split(".").filter{ it.isNotEmpty() }.map { it.length }
+
 
     companion object {
         private val day = Day12()
