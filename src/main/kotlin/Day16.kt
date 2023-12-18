@@ -3,22 +3,38 @@ import java.io.File
 class Day16 {
     data class Point(val x: Int, val y: Int)
     data class Beam(var location: Point, var direction: Char)
+
     fun part1(input: List<String>): Int {
         val grid = mutableMapOf<Point, Char>()
         input.forEachIndexed { y, s ->
             s.forEachIndexed { x, c -> grid[Point(x, y)] = c }
         }
+        return traverseGrid(grid, Beam(Point(-1, 0), 'r'))
+    }
+
+    fun part2(input: List<String>): Int {
+        val grid = mutableMapOf<Point, Char>()
+        input.forEachIndexed { y, s ->
+            s.forEachIndexed { x, c -> grid[Point(x, y)] = c }
+        }
+        val maxX = grid.keys.maxBy { it.x }.x
+        val maxY = grid.keys.maxBy { it.y }.y
+        val startPositions = (0..maxX).map { x -> Beam(Point(x, -1), 'u') }.toMutableList()
+        startPositions.addAll((0..maxX).map { x -> Beam(Point(x, maxY + 1), 'd') })
+        startPositions.addAll((0..maxY).map { y -> Beam(Point(-1, y), 'r') })
+        startPositions.addAll((0..maxY).map { y -> Beam(Point(maxX + 1, y), 'l') })
+        return startPositions.maxOf { traverseGrid(grid, it) }
+    }
+
+    private fun traverseGrid(grid: Map<Point, Char>, start: Beam): Int {
         val energized = mutableSetOf<Point>()
-        val beams = mutableListOf(Beam(Point(-1, 0), 'r'))
+        val beams = mutableListOf(start)
         val seen = mutableSetOf<Beam>()
         while (beams.isNotEmpty()) {
-//            println("${beams.size}: $beams")
             val beam = beams.removeFirst()
-            if (seen.any { it == beam}) {
-//                println("Already seen $beam")
+            if (seen.any { it == beam }) {
                 continue
             }
-//            println("Adding $beam to seen")
             seen.add(beam.copy())
             beam.location = when (beam.direction) {
                 'l' -> Point(beam.location.x - 1, beam.location.y)
@@ -27,9 +43,7 @@ class Day16 {
                 'd' -> Point(beam.location.x, beam.location.y - 1)
                 else -> beam.location
             }
-//            println("Moved to ${beam.location} with direction ${beam.direction}")
             if (beam.location !in grid.keys) {
-//                println("Out of bounds ${beam.location}")
                 continue
             }
             energized.add(beam.location)
@@ -51,14 +65,12 @@ class Day16 {
                 '|' -> if (beam.direction == 'l' || beam.direction == 'r') {
                     beam.direction = 'u'
                     val newBeam = beam.copy(direction = 'd')
-//                    println("Splitting beams into $beam and $newBeam")
                     beams.add(newBeam)
                 }
 
                 '-' -> if (beam.direction == 'u' || beam.direction == 'd') {
                     beam.direction = 'l'
                     val newBeam = beam.copy(direction = 'r')
-//                    println("Splitting beams into $beam and $newBeam")
                     beams.add(newBeam)
                 }
 
@@ -76,6 +88,7 @@ class Day16 {
         @JvmStatic
         fun main(args: Array<String>) {
             println(day.part1(input))
+            println(day.part2(input))
         }
     }
 }
