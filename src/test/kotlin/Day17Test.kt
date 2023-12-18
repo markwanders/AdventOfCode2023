@@ -21,7 +21,7 @@ class Day17Test {
 
     @Test
     fun testCase1() {
-        assertEquals(1320, day.part1(testInput1))
+        assertEquals(102, day.part1(testInput1))
     }
 
 }
