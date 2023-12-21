@@ -24,4 +24,8 @@ class Day17Test {
         assertEquals(102, day.part1(testInput1))
     }
 
+    @Test
+    fun testCase2() {
+        assertEquals(94, day.part2(testInput1))
+    }
 }
