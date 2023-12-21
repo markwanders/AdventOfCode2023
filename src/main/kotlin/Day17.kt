@@ -3,8 +3,14 @@ import java.io.File
 import java.util.*
 
 class Day17 {
+    enum class Direction {
+        RIGHT, LEFT, UP, DOWN, NONE
+    }
+
     data class Point(val x: Int, val y: Int)
-    data class Node(val point: Point, val previousDirection: Char, val directionCounter: Int, val cost: Int)
+    data class Node(val point: Point, val previousDirection: Direction, val directionCounter: Int, val cost: Int)
+    data class State(val point: Point, val previousDirection: Direction, val directionCounter: Int)
+
     fun part1(input: List<String>): Int {
         val grid = mutableMapOf<Point, Int>()
         input.forEachIndexed { y, s ->
@@ -14,69 +20,85 @@ class Day17 {
         }
         val position = Point(0, 0)
         val finish = grid.keys.maxBy { it.x + it.y }
-        val initialNode = Node(position, 'c', 0, 0)
+        val initialNode = Node(position, Direction.NONE, 0, 0)
         val queue: PriorityQueue<Node> = PriorityQueue(setOf(initialNode).toSortedSet(compareBy { it.cost }))
-        val seen = mutableSetOf(initialNode)
-        while (seen.none { it.point == finish }) {
+        val seen = mutableMapOf<State, Int>()
+        while (queue.isNotEmpty()) {
             val node = queue.poll()
             val neighbours = neighbours(node, grid)
-//            println("Neighbours for $node are $neighbours")
-            val minima = neighbours.filterNot { n -> seen.any { s -> s.point == n.point && s.previousDirection == n.previousDirection && s.directionCounter == n.directionCounter && s.cost < n.cost } }
-//            println("New minimal distances: $minima")
-            seen.addAll(minima)
-            queue.addAll(minima)
+            for(n in neighbours) {
+                val state = State(n.point, n.previousDirection, n.directionCounter)
+                if (seen.getOrDefault(state, Int.MAX_VALUE) > n.cost ) {
+                    seen[state] = n.cost
+                    queue.add(n)
+                }
+            }
         }
-        return seen.first { it.point == finish }.cost
+        return seen.entries.filter { it.key.point == finish }.minOf { it.value }
     }
 
     private fun neighbours(node: Node, grid: Map<Point, Int>): List<Node> {
         val nodes = mutableListOf<Node>()
-        //right
-        val right = Point(node.point.x + 1, node.point.y)
-        if (grid.containsKey(right) && node.previousDirection != 'l') {
-            if (node.previousDirection == 'r') {
-                if (node.directionCounter < 3) {
-                    nodes.add(Node(right, 'r', node.directionCounter + 1, node.cost + grid[right]!!))
+        when (node.previousDirection) {
+            Direction.RIGHT, Direction.LEFT -> {
+                // add three steps up and three steps down to queue, if in range
+                (1..3).forEach { i ->
+                    val nextPointUp = Point(node.point.x, node.point.y + i)
+                    if (grid.containsKey(nextPointUp)) {
+                        val cost = (1..i).sumOf { grid.getValue(Point(node.point.x, node.point.y + it)) }
+                        nodes.add(Node(nextPointUp, Direction.UP, i, node.cost + cost))
+                    }
+                    val nextPointDown = Point(node.point.x, node.point.y - i)
+                    if (grid.containsKey(nextPointDown)) {
+                        val cost = (1..i).sumOf { grid.getValue(Point(node.point.x, node.point.y - it)) }
+                        nodes.add(Node(nextPointDown, Direction.DOWN, i, node.cost + cost))
+                    }
                 }
-            } else {
-                nodes.add(Node(right, 'r', 1, node.cost + grid[right]!!))
             }
-        }
-        //left
-        val left = Point(node.point.x - 1, node.point.y)
-        if (grid.containsKey(left) && node.previousDirection != 'r') {
-            if (node.previousDirection == 'l') {
-                if (node.directionCounter < 3) {
-                    nodes.add(Node(left, 'l', node.directionCounter + 1, node.cost + grid[left]!!))
+
+            Direction.UP, Direction.DOWN -> {
+                // add three steps left and three steps right to queue, if in range
+                (1..3).forEach { i ->
+                    val nextPointRight = Point(node.point.x + i, node.point.y)
+                    if (grid.containsKey(nextPointRight)) {
+                        val cost = (1..i).sumOf { grid.getValue(Point(node.point.x + it, node.point.y)) }
+                        nodes.add(Node(nextPointRight, Direction.RIGHT, i, node.cost + cost))
+                    }
+                    val nextPointLeft = Point(node.point.x - i, node.point.y)
+                    if (grid.containsKey(nextPointLeft)) {
+                        val cost = (1..i).sumOf { grid.getValue(Point(node.point.x - it, node.point.y)) }
+                        nodes.add(Node(nextPointLeft, Direction.LEFT, i, node.cost + cost))
+                    }
                 }
-            } else {
-                nodes.add(Node(left, 'l', 1, node.cost + grid[left]!!))
             }
-        }
-        //up
-        val up = Point(node.point.x, node.point.y + 1)
-        if (grid.containsKey(up) && node.previousDirection != 'd') {
-            if (node.previousDirection == 'u') {
-                if (node.directionCounter < 3) {
-                    nodes.add(Node(up, 'u', node.directionCounter + 1, node.cost + grid[up]!!))
+
+            Direction.NONE ->
+                (1..3).forEach { i ->
+                    val nextPointUp = Point(node.point.x, node.point.y + i)
+                    if (grid.containsKey(nextPointUp)) {
+                        val cost = (1..i).sumOf { grid.getValue(Point(node.point.x, node.point.y + it)) }
+                        nodes.add(Node(nextPointUp, Direction.UP, i, node.cost + cost))
+                    }
+                    val nextPointDown = Point(node.point.x, node.point.y - i)
+                    if (grid.containsKey(nextPointDown)) {
+                        val cost = (1..i).sumOf { grid.getValue(Point(node.point.x, node.point.y - it)) }
+                        nodes.add(Node(nextPointDown, Direction.DOWN, i, node.cost + cost))
+                    }
+                    val nextPointRight = Point(node.point.x + i, node.point.y)
+                    if (grid.containsKey(nextPointRight)) {
+                        val cost = (1..i).sumOf { grid.getValue(Point(node.point.x + it, node.point.y)) }
+                        nodes.add(Node(nextPointRight, Direction.RIGHT, i, node.cost + cost))
+                    }
+                    val nextPointLeft = Point(node.point.x - i, node.point.y)
+                    if (grid.containsKey(nextPointLeft)) {
+                        val cost = (1..i).sumOf { grid.getValue(Point(node.point.x - it, node.point.y)) }
+                        nodes.add(Node(nextPointLeft, Direction.LEFT, i, node.cost + cost))
+                    }
                 }
-            } else {
-                nodes.add(Node(up, 'u', 1, node.cost + grid[up]!!))
-            }
-        }
-        //down
-        val down = Point(node.point.x, node.point.y - 1)
-        if (grid.containsKey(down) && node.previousDirection != 'u') {
-            if (node.previousDirection == 'd') {
-                if (node.directionCounter < 3) {
-                    nodes.add(Node(down, 'd', node.directionCounter + 1, node.cost + grid[down]!!))
-                }
-            } else {
-                nodes.add(Node(down, 'd', 1, node.cost + grid[down]!!))
-            }
         }
         return nodes
     }
+
     companion object {
         private val day = Day17()
         private val input = File("src/main/resources/day17.txt").readLines()
