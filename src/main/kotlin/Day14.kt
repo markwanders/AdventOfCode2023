@@ -32,24 +32,25 @@ class Day14 {
                 }
             }
         }
-        val seen = mutableMapOf<Int, Set<Point>>()
+        val seen = mutableMapOf<String, Int>()
         var stones = round
         var cycle = 0
         var length = 0
         val total = 1_000_000_000
         while (cycle < total) {
-            stones = cycle(stones, cubed, input.size)
-            if (seen.values.contains(stones)) {
-                length = cycle - seen.entries.first { it.value == stones }.key
-                println("Found repetition of value ${stones.sumOf { input.size - it.y }}")
+            if (stones.toString() in seen) {
+                length = cycle - seen[stones.toString()]!!
                 break
             }
+            seen[stones.toString()] = cycle
+            stones = cycle(stones, cubed, input.size)
             cycle++
-            seen[cycle] = stones
         }
-        println("$cycle $length")
-        seen.entries.forEach { println("${it.key}: ${it.value.sumOf { input.size - it.y }}") }
-        return seen[(total-cycle)%length]!!.sumOf { input.size - it.y }
+        val remainingCycles =  (total - cycle) % length
+        repeat(remainingCycles) {
+            stones = cycle(stones, cubed, input.size)
+        }
+        return stones.sumOf { input.size - it.y }
     }
 
     private fun cycle(round: Set<Point>, cubed: Set<Point>, gridSize: Int) =
