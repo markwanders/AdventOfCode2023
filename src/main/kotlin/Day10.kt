@@ -1,4 +1,5 @@
 import java.io.File
+import kotlin.math.abs
 
 class Day10 {
     data class Point(val x: Int, val y: Int)
@@ -17,6 +18,36 @@ class Day10 {
             path.add(position)
         }
         return path.size/2
+    }
+
+    fun part2(input: List<String>): Int {
+        val grid = mutableMapOf<Point, Char>()
+        input.forEachIndexed { y, line ->
+            line.forEachIndexed { x, c -> grid[Point(x, y)] = c }
+        }
+        val start = grid.entries.first { it.value == 'S' }.key
+        val path = mutableSetOf(start)
+        val corners = mutableListOf(start)
+        var position = start
+        while (true) {
+            val neighbours = neighbours(position, grid)
+            val nextPoint = neighbours.firstOrNull { !path.contains(it.key) } ?: break
+            position = nextPoint.key
+            path.add(position)
+            if (grid[position]!! in "LJ7FS") {
+                corners.add(position)
+            }
+        }
+        // Pick's theorem: A = i + b/2 - 1 where i is the number of interior points, A is the area and b are the boundary points
+        // So i = A + 1 - b/2, where we can derive i from the shoelace formula
+        var area = 0
+        for (i in corners.indices) {
+            if (i + 1 in corners.indices) {
+                area += (corners[i].y + corners[i + 1].y) * (corners[i].x - corners[i + 1].x)
+            }
+        }
+        area /= 2
+        return abs(area) - (path.size/2 - 1)
     }
 
     private fun neighbours(position: Point, grid: Map<Point, Char>) : List<Map.Entry<Point, Char>> =
@@ -50,6 +81,7 @@ class Day10 {
         @JvmStatic
         fun main(args: Array<String>) {
             println(day.part1(input))
+            println(day.part2(input))
         }
     }
 }

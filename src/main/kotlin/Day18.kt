@@ -50,14 +50,14 @@ class Day18 {
         return areaOfPolygon(corners, perimeter)
     }
 
+    // Again using a combination of Pick's theorem and shoelace formula
     private fun areaOfPolygon(corners: List<Point>, perimeter: Long): Long {
         var sum = 0L
         for (i in corners.indices) {
             if (i + 1 in corners.indices) {
-                sum += corners[i].x * corners[i + 1].y - corners[i].y * corners[i + 1].x
+                sum += (corners[i].y + corners[i + 1].y) * (corners[i].x - corners[i + 1].x)
             }
         }
-
         return (0.5 * abs(sum) + perimeter / 2 + 1).toLong()
     }
 
